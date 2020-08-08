@@ -1,0 +1,11 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iac-cluster-admins
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: Group
+    name: "4f2a7d8a-3699-4e15-bfbd-50d00bdc938e" # team-platform AAD group id
