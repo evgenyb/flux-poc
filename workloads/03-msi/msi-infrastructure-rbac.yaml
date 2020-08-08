@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-nmi-service-account
-  namespace: msi
+  namespace: default
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -84,7 +84,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
-  namespace: msi
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-nmi-role
@@ -98,7 +98,7 @@ metadata:
     tier: node
     k8s-app: aad-pod-id
   name: nmi
-  namespace: msi
+  namespace: default
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -121,11 +121,11 @@ spec:
         name: iptableslock
       containers:
       - name: nmi
-        image: "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.5.5"
+        image: "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.6.2"
         imagePullPolicy: Always
         args:
-          - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
+          - "--http-probe-port=8085"
         env:
           - name: HOST_IP
             valueFrom:
@@ -153,17 +153,17 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8080
+            port: 8085
           initialDelaySeconds: 10
           periodSeconds: 5
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-mic-service-account
-  namespace: msi
+  namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -180,11 +180,17 @@ rules:
   resources: ["events"]
   verbs: ["create", "patch"]
 - apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "create", "update"]
+- apiGroups: [""]
   resources: ["endpoints"]
   verbs: ["create", "get","update"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
+  verbs: ["get", "list", "watch", "post", "update"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azurepodidentityexceptions"]
+  verbs: ["list", "update"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureassignedidentities"]
   verbs: ["*"]
@@ -198,7 +204,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
-  namespace: msi
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-mic-role
@@ -211,7 +217,7 @@ metadata:
     component: mic
     k8s-app: aad-pod-id
   name: mic
-  namespace: msi
+  namespace: default
 spec:
   replicas: 2
   selector:
@@ -227,11 +233,16 @@ spec:
       serviceAccountName: aad-pod-id-mic-service-account
       containers:
       - name: mic
-        image: "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.5.5"
+        image: "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.6.2"
         imagePullPolicy: Always
         args:
           - "--cloudconfig=/etc/kubernetes/azure.json"
           - "--logtostderr"
+        env:
+        - name: MIC_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace                
         resources:
           limits:
             cpu: 200m
@@ -254,4 +265,4 @@ spec:
         hostPath:
           path: /etc/kubernetes/azure.json
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
