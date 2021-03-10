@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 #
-# usage: provision-aks.sh ws2 10.12.0.0 AAD-ADMIN-GROUP-OBJECT-ID
+# usage: ./provision-aks.sh iac-flux-poc 10.12.0.0 AAD-ADMIN-GROUP-OBJECT-ID
 
-AKS_PREFIX=$1
+PREFIX=$1
 VNET_ADDRESS_PREFIX=$2
 ADMIN_GROUP_ID=$3
-PREFIX="iac"
 
-RESOURCE_GROUP_NAME="${PREFIX}-${AKS_PREFIX}-aks-rg"
-AKS_NAME="aks-${AKS_PREFIX}"
-VNET_NAME="${PREFIX}-${AKS_PREFIX}-aks-vnet"
-MANAGED_IDENTITY_NAME="${PREFIX}-${AKS_PREFIX}-aks-mi"
+RESOURCE_GROUP_NAME="${PREFIX}-rg"
+AKS_NAME="${PREFIX}-aks"
+VNET_NAME="${PREFIX}-vnet"
+MANAGED_IDENTITY_NAME="${PREFIX}-aks-mi"
 
 # Create AKS resource group
 echo -e "Create ${RESOURCE_GROUP_NAME} resource group"
@@ -45,6 +44,6 @@ az aks create -g ${RESOURCE_GROUP_NAME} -n ${AKS_NAME} \
     --docker-bridge-address 172.17.0.1/16 \
 	--enable-managed-identity \
     --assign-identity ${MANAGED_IDENTITY_ID} \
-    --vnet-subnet-id ${SUBNET_ID} \
+    --vnet-subnet-id "${SUBNET_ID}" \
     --no-ssh-key 
 
