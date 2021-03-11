@@ -16,11 +16,17 @@ az aks get-credentials -g iac-flux-poc-aks-rg -n aks-flux-poc
 # Add flux repo 
 helm repo add fluxcd https://charts.fluxcd.io
 
-# deploy flux 
-helm upgrade -i flux fluxcd/flux --set git.url=git@ssh.dev.azure.com:v3/evgenyborzenin/flux/k8s-config --set git.branch=main --set git.path=manifests --set registry.disableScanning=true --set prometheus.serviceMonitor.create=true --set dashboards.enabled=true --set prometheus.enabled=true --namespace flux
+# Create flux ns
+kubectl create ns flux
 
-# Get SSH key 
+# deploy flux 
+helm upgrade -i flux fluxcd/flux --set git.url=git@ssh.dev.azure.com:v3/AZURE-DEVOPS-ORG/PROJECT/REPO --set git.branch=main --set git.path=manifests --set registry.disableScanning=true --set prometheus.serviceMonitor.create=true --set dashboards.enabled=true --set prometheus.enabled=true --namespace flux
+
+# Get SSH key  (linux)
 kubectl -n flux logs deployment/flux | grep identity.pub | cut -d '"' -f2
+
+# Get SSH key  (powershell)
+kubectl -n flux logs deployment/flux | grep identity.pub 
 
 # Add SSH key to your `SSH public keys` https://dev.azure.com/AZURE-DEVOPS-ORG/_usersSettings/keys
 
