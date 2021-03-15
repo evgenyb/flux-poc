@@ -22,6 +22,9 @@ kubectl create ns flux
 # deploy flux 
 helm upgrade -i flux fluxcd/flux --set git.url=git@ssh.dev.azure.com:v3/AZURE-DEVOPS-ORG/PROJECT/REPO --set git.branch=main --set git.path=manifests --set registry.disableScanning=true --set prometheus.serviceMonitor.create=true --set dashboards.enabled=true --set prometheus.enabled=true --namespace flux
 
+# flux rollout deployment
+kubectl -n flux rollout status deployment/flux
+
 # Get SSH key  (linux)
 kubectl -n flux logs deployment/flux | grep identity.pub | cut -d '"' -f2
 
